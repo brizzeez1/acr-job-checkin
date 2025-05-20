@@ -10,12 +10,10 @@
     href="https://unpkg.com/leaflet/dist/leaflet.css"
   />
   <style>
-    /* make the map fill the iframe */
     html, body { height:100%; margin:0; padding:0; }
     #map        { height:100%; width:100%; }
   </style>
 </head>
-
 <body>
   <div id="map"></div>
 
@@ -25,45 +23,48 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 
   <script>
-    // Your published‐to‐web CSV URL:
     const sheetUrl = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRJlw6hMgViLlMPytg-Pwwn73EDzcFOjxndcjN8vBkNnOLGCo-SErsbTVwmhgHGEJSfa8lElgSkQILz/pub?output=csv';
 
-    // slugify “City” → “city-az”
     function slugify(str) {
       return str.toLowerCase().trim()
         .replace(/[^a-z0-9]+/g,'-')
         .replace(/^-+|-+$/g,'');
     }
 
-    // init map
     const map = L.map('map').setView([33.4484, -112.0740], 9);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // parse & drop pins
     Papa.parse(sheetUrl, {
       download: true,
       header:   true,
       complete: ({ data }) => {
         data.forEach(row => {
           const lat = parseFloat(row.Latitude),
-                lng = parseFloat(row.Longitude);
-          if (!row.City || isNaN(lat) || isNaN(lng)) return;
+                lng = parseFloat(row.Longitude),
+                addr = row["Project Address - City/State"] || '';
 
-          const citySlug = slugify(row.City + '-az'),
-                popupHtml = `
-                  <div style="line-height:1.3;max-width:200px">
-                    <strong>Work:</strong> ${row['Type of Work']||''}<br/>
-                    <strong>Tech:</strong> ${row['Tech Name']||''}<br/>
-                    <p>${row.Summary||''}</p>
-                    <a href="/service-area/${citySlug}">
-                      See all jobs in ${row.City}
-                    </a>
-                  </div>`;
+          if (!addr || isNaN(lat) || isNaN(lng)) return;
 
-          // default Leaflet marker (won’t get AdBlock’d)
-          L.marker([lat,lng])
+          // split on comma or slash to get the city name
+          const city = addr.split(/,|\//)[0].trim(),
+                citySlug = slugify(city + '-az'),
+                work    = row["Type Of work performed"] || '',
+                tech    = row["Technician First Name"]  || '',
+                summary = row["Quick summary of work"]  || '';
+
+          const popupHtml = `
+            <div style="line-height:1.3; max-width:200px">
+              <strong>Work:</strong> ${work}<br/>
+              <strong>Tech:</strong> ${tech}<br/>
+              <p>${summary}</p>
+              <a href="/service-area/${citySlug}">
+                See all jobs in ${city}
+              </a>
+            </div>`;
+
+          L.marker([lat, lng])
             .addTo(map)
             .bindPopup(popupHtml);
         });
