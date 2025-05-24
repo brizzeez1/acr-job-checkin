@@ -109,7 +109,7 @@ function slugify(text) {
 const serviceSlug = serviceUrlMap[serviceType] || slugify(serviceType);
 const icon = serviceIcons[serviceType] || "🔧";
 const citySlug = slugify(place);
-const cptUrl = `/services/${serviceSlug}-in-${citySlug}/`;
+const cptUrl = `https://azdisaster.com/services/${serviceSlug}-in-${citySlug}/`;
 
 const popupHtml = `
   <div style="line-height:1.4; max-width:220px; font-family: sans-serif;">
