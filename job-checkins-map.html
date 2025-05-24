@@ -68,21 +68,43 @@
           const lng = parseFloat(row.Longitude);
           if (isNaN(lat) || isNaN(lng)) return;
 
-          const tech    = row["Technician First Name"] || "";
-          const summary = row["Quick summary of work"]    || "";
-          const place   = row["Project Address - City/State"] || "";
+          const tech = row["Technician First Name"] || "";
+const serviceType = row["Type Of work performed"] || "";
+const place = row["Project Address - City/State"] || "";
 
-          // build the link (or fallback to plain text if not in our map)
-          const url = cityUrls[place];
-          const placeLink = url
-            ? `<a href="${url}" target="_blank">${place}</a>`
-            : place;
+// Map service labels to correct slugs
+const serviceUrlMap = {
+  "Water Damage": "water-damage",
+  "Fire Damage": "fire-damage",
+  "Mold Remediation": "mold-remediation",
+  "Remodeling Project": "remodeling-project",
+  "Reconstruction - Water": "reconstruction-water",
+  "Reconstruction - Fire": "reconstruction-fire",
+  "Reconstruction - Mold": "reconstruction-mold",
+  
+};
 
-          const popupHtml = `
-            <div style="line-height:1.4; max-width:200px">
-              <strong>${tech}</strong>: ${summary} in ${placeLink}.
-            </div>
-          `.trim();
+// Slugify fallback if new type appears
+function slugify(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z0-9\s\-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .trim();
+}
+
+const serviceSlug = serviceUrlMap[serviceType] || slugify(serviceType);
+const citySlug = slugify(place);
+const url = `/services/${serviceSlug}-in-${citySlug}/`;
+
+const placeLink = `<a href="${url}">${place}</a>`;
+
+const popupHtml = `
+  <div style="line-height:1.4; max-width:200px">
+    <strong>${tech}</strong>: ${serviceType} in ${placeLink}.
+  </div>
+`.trim();
+
 
           L.marker([lat, lng], {
             icon: L.icon({
