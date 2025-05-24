@@ -68,11 +68,14 @@
           const lng = parseFloat(row.Longitude);
           if (isNaN(lat) || isNaN(lng)) return;
 
-          const tech = row["Technician First Name"] || "";
+const tech = row["Technician First Name"] || "";
 const serviceType = row["Type Of work performed"] || "";
 const place = row["Project Address - City/State"] || "";
+const rawDate = row["Date"] || "";
 
-// Map service labels to correct slugs
+const dateStr = new Date(rawDate).toLocaleDateString();
+
+// Map service types to slugs and emojis/icons
 const serviceUrlMap = {
   "Water Damage": "water-damage",
   "Fire Damage": "fire-damage",
@@ -81,10 +84,20 @@ const serviceUrlMap = {
   "Reconstruction - Water": "reconstruction-water",
   "Reconstruction - Fire": "reconstruction-fire",
   "Reconstruction - Mold": "reconstruction-mold",
-  
+  "Reconstruction after Water Damage": "reconstruction-after-water-damage"
 };
 
-// Slugify fallback if new type appears
+const serviceIcons = {
+  "Water Damage": "💧",
+  "Fire Damage": "🔥",
+  "Mold Remediation": "🌑",
+  "Remodeling Project": "🛠️",
+  "Reconstruction - Water": "👷💧",
+  "Reconstruction - Fire": "👷🔥",
+  "Reconstruction - Mold": "👷🌑",
+ 
+};
+
 function slugify(text) {
   return text.toLowerCase()
     .replace(/[^a-z0-9\s\-]/g, '')
@@ -94,16 +107,18 @@ function slugify(text) {
 }
 
 const serviceSlug = serviceUrlMap[serviceType] || slugify(serviceType);
+const icon = serviceIcons[serviceType] || "🔧";
 const citySlug = slugify(place);
-const url = `/services/${serviceSlug}-in-${citySlug}/`;
-
-const placeLink = `<a href="${url}">${place}</a>`;
+const cptUrl = `/services/${serviceSlug}-in-${citySlug}/`;
 
 const popupHtml = `
-  <div style="line-height:1.4; max-width:200px">
-    <strong>${tech}</strong>: ${serviceType} in ${placeLink}.
+  <div style="line-height:1.4; max-width:220px; font-family: sans-serif;">
+    ${icon} <strong>${tech}</strong> is working on <strong>${serviceType}</strong><br>
+    <a href="${cptUrl}">${place}</a><br>
+    <small style="color:#666;">(${dateStr})</small>
   </div>
 `.trim();
+
 
 
           L.marker([lat, lng], {
